@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🎤 ล่าคำสัมผัส - เกมคำคล้องจอง</title>
+  
+  <!-- นำเข้า Google Fonts ภาษาไทยน่ารัก -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&family=Sriracha&display=swap" rel="stylesheet">
+  
+  <!-- นำเข้า Tailwind CSS สำหรับการจัดเลย์เอาต์ที่รวดเร็วและสวยงาม -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- นำเข้า html2canvas เพื่อบันทึกหน้าสรุปผลเป็นรูปภาพ -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Mali', 'Sriracha', 'cursive', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* สไตล์เพิ่มเติมสำหรับสร้างบรรยากาศฟรุ้งฟริ้ง */
+    body {
+      font-family: 'Mali', 'Sriracha', 'cursive', 'sans-serif';
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* พื้นหลังขยับเบา ๆ */
+    .bg-gradient-animate {
+      background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* เมฆลอยช้า ๆ */
+    .cloud {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 100px;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .cloud::before, .cloud::after {
+      content: '';
+      position: absolute;
+      background: rgba(255, 255, 255, 0.6);
+      border-radius: 50%;
+    }
+
+    /* เอฟเฟกต์ฟองสบู่สะท้อนแสง */
+    .bubble-sphere {
+      background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.2) 20%, rgba(135, 206, 250, 0.6) 60%, rgba(30, 144, 255, 0.8) 100%);
+      box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.6), 0 4px 10px rgba(0, 0, 0, 0.15);
+      backdrop-filter: blur(1px);
+    }
+
+    /* สั่นหน้าจอเมื่อตอบผิด */
+    @keyframes shake {
+      0%, 100% { transform: translate(0, 0); }
+      10%, 30%, 50%, 70%, 90% { transform: translate(-10px, 0); }
+      20%, 40%, 60%, 80% { transform: translate(10px, 0); }
+    }
+    .shake-effect {
+      animation: shake 0.4s ease-in-out;
+    }
+
+    /* ซ่อน scrollbar */
+    ::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+</head>
+<body class="bg-gradient-animate w-screen h-screen relative select-none">
+
+  <!-- เมฆและดาวพื้นหลัง (z-index: 0) -->
+  <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
+    <!-- เมฆก้อนที่ 1 -->
+    <div class="cloud w-32 h-10 top-12 left-10 opacity-70 animate-[bounce_6s_infinite]">
+      <div class="absolute w-16 h-16 -top-8 left-6 bg-white/60 rounded-full"></div>
+      <div class="absolute w-12 h-12 -top-6 left-16 bg-white/60 rounded-full"></div>
+    </div>
+    <!-- เมฆก้อนที่ 2 -->
+    <div class="cloud w-40 h-12 top-1/4 right-10 opacity-50 animate-[bounce_8s_infinite]">
+      <div class="absolute w-20 h-20 -top-10 left-8 bg-white/60 rounded-full"></div>
+      <div class="absolute w-14 h-14 -top-6 left-20 bg-white/60 rounded-full"></div>
+    </div>
+    <!-- เมฆก้อนที่ 3 -->
+    <div class="cloud w-36 h-10 bottom-1/4 left-1/4 opacity-40 animate-[bounce_7s_infinite]">
+      <div class="absolute w-16 h-16 -top-8 left-8 bg-white/60 rounded-full"></div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 1. หน้าแรก (Main Menu Screen) -->
+  <!-- ========================================================= -->
+  <div id="screenMainMenu" class="absolute inset-0 flex flex-col justify-between p-6 z-30 overflow-y-auto">
+    <!-- ส่วนหัวหน้าแรก -->
+    <div class="text-center mt-6">
+      <h2 id="lblMainSchool" class="text-lg md:text-xl text-blue-700 font-semibold bg-white/50 backdrop-blur-sm px-4 py-1.5 rounded-full inline-block shadow-sm">โรงเรียนบ้านขี้เหล็กใหญ่</h2>
+      <h1 id="lblMainGameTitle" class="text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 drop-shadow-md mt-4 tracking-wider animate-pulse">🎤 ล่าคำสัมผัส</h1>
+      <p class="text-gray-700 mt-2 text-sm md:text-base">เรียนรู้ภาษาไทยแสนสนุก ฝึกสมองด้วยคำคล้องจอง</p>
+    </div>
+
+    <!-- ส่วนกลาง: ฟอร์มกรอกชื่อและปุ่มเริ่มเล่น -->
+    <div class="max-w-md w-full mx-auto bg-white/90 backdrop-blur-md rounded-3xl p-6 md:p-8 shadow-2xl border-4 border-white">
+      <div class="mb-5 text-center">
+        <label class="block text-gray-700 text-lg font-semibold mb-2">🎈 ชื่อของหนูคือใครเอ่ย?</label>
+        <input type="text" id="txtStudentName" placeholder="กรอกชื่อเล่นหรือชื่อจริงตรงนี้จ้า..." 
+               class="w-full px-5 py-3 rounded-full border-2 border-pink-300 focus:border-pink-500 focus:outline-none text-center text-lg text-pink-700 font-semibold shadow-inner placeholder-pink-300">
+      </div>
+
+      <!-- ปุ่มหลักในการเข้าเล่น/ตั้งค่า -->
+      <div class="space-y-4">
+        <button id="btnStartGame" class="w-full bg-gradient-to-r from-emerald-400 to-green-500 hover:from-emerald-500 hover:to-green-600 text-white font-bold text-2xl py-4 rounded-full shadow-lg transform active:scale-95 transition-all border-b-4 border-green-700 flex items-center justify-center gap-2">
+          <span>🎮 เริ่มเล่นเกมเลย!</span>
+        </button>
+
+        <div class="grid grid-cols-2 gap-4">
+          <button id="btnGoToLeaderboard" class="bg-amber-400 hover:bg-amber-500 text-white font-semibold py-3 px-4 rounded-full shadow-md transform active:scale-95 transition-all border-b-4 border-amber-600 flex items-center justify-center gap-1.5 text-sm md:text-base">
+            <span>🏆 ตารางคะแนน</span>
+          </button>
+          <button id="btnGoToSettings" class="bg-indigo-400 hover:bg-indigo-500 text-white font-semibold py-3 px-4 rounded-full shadow-md transform active:scale-95 transition-all border-b-4 border-indigo-600 flex items-center justify-center gap-1.5 text-sm md:text-base">
+            <span>⚙️ ตั้งค่าของคุณครู</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ส่วนท้ายหน้าแรก -->
+    <div class="text-center mb-4">
+      <p id="lblMainTeacher" class="text-xs md:text-sm text-gray-600 font-medium">คุณครูผู้ดูแลระบบ: ครูปาล์มมี่</p>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 2. หน้าเล่นเกม (Game Screen) -->
+  <!-- ========================================================= -->
+  <div id="screenGameplay" class="absolute inset-0 hidden z-10">
+    
+    <!-- แถบแจ้งข้อมูลสถานะ HUD (z-index: 50, pointer-events:none) -->
+    <div class="absolute top-0 left-0 right-0 p-4 flex justify-between items-start z-50 pointer-events-none">
+      <!-- ข้อมูลผู้เล่นและคะแนน -->
+      <div class="bg-white/90 backdrop-blur-md rounded-2xl p-3 shadow-md flex flex-col gap-1 border-2 border-white pointer-events-auto min-w-[130px]">
+        <div class="text-xs text-gray-500 font-semibold truncate max-w-[150px]" id="hudStudentName">ชื่อ: -</div>
+        <div class="text-lg font-bold text-blue-600 flex justify-between">
+          <span>คะแนน:</span>
+          <span id="hudScore" class="ml-2">0</span>
+        </div>
+        <div class="text-xs font-semibold text-pink-500 flex justify-between" id="hudComboArea">
+          <span>คอมโบ:</span>
+          <span id="hudCombo">x0</span>
+        </div>
+      </div>
+
+      <!-- แถบเวลาถอยหลัง -->
+      <div class="bg-white/90 backdrop-blur-md rounded-full px-5 py-2.5 shadow-md border-2 border-white pointer-events-auto flex items-center gap-2">
+        <span class="text-xl md:text-2xl">⏳</span>
+        <span id="hudTime" class="text-xl md:text-2xl font-bold text-red-500 min-w-[45px] text-center">60</span>
+      </div>
+    </div>
+
+    <!-- แถบโจทย์กลางจอด้านบน (z-index: 50, pointer-events: none เพื่อไม่ทับฟองคำ) -->
+    <div class="absolute top-24 left-0 right-0 flex justify-center z-50 pointer-events-none">
+      <div class="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-4 rounded-3xl shadow-xl border-4 border-white text-center transform scale-100 md:scale-110 flex flex-col items-center pointer-events-auto">
+        <span class="text-xs font-bold tracking-wider opacity-90 uppercase">สะกดคำสัมผัสกับคำว่า:</span>
+        <span id="lblTargetWord" class="text-3xl md:text-5xl font-extrabold mt-1 tracking-wide drop-shadow-md">นา</span>
+      </div>
+    </div>
+
+    <!-- พื้นที่ฟองคำลอยขึ้น (z-index: 20, touch-action: none, ไม่มี overflow: hidden ในสไตล์เพื่อให้ขอบจอไม่ตัดขาด) -->
+    <div id="bubbleArea" class="fixed inset-0 z-20 touch-action-none"></div>
+
+    <!-- แถบนับถอยหลัง 3-2-1 ก่อนเริ่ม (z-index: 60) -->
+    <div id="countdownOverlay" class="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col justify-center items-center z-[60] pointer-events-auto">
+      <div class="text-center text-white scale-90 md:scale-100">
+        <p class="text-2xl font-bold text-pink-300 mb-2">เตรียมตัวลุยล่าฟองคำ!</p>
+        <div id="countdownNumber" class="text-8xl md:text-9xl font-extrabold text-white animate-ping">3</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 3. หน้าสรุปผล (Result / Certificate Screen) -->
+  <!-- ========================================================= -->
+  <div id="screenResult" class="absolute inset-0 hidden z-30 overflow-y-auto p-6 flex flex-col justify-between items-center bg-indigo-500/10">
+    
+    <!-- พื้นที่เกียรติบัตรที่สามารถบันทึกเป็นรูปภาพได้ -->
+    <div id="certificateContainer" class="max-w-xl w-full bg-white rounded-[2.5rem] p-8 md:p-12 shadow-2xl border-[16px] border-amber-300 my-auto relative overflow-hidden flex flex-col items-center text-center">
+      <!-- ของตกแต่งหัวเกียรติบัตร -->
+      <div class="absolute -top-10 -left-10 w-24 h-24 bg-pink-400 rounded-full opacity-20"></div>
+      <div class="absolute -bottom-10 -right-10 w-32 h-32 bg-blue-400 rounded-full opacity-20"></div>
+      
+      <!-- โลโก้/ดาวรางวัล -->
+      <div class="text-5xl md:text-6xl mb-4">🏆</div>
+
+      <!-- หัวข้อเกียรติบัตร -->
+      <h3 id="lblResultSchool" class="text-sm md:text-base text-gray-500 font-bold tracking-widest uppercase">โรงเรียนบ้านขี้เหล็กใหญ่</h3>
+      <h2 class="text-2xl md:text-3xl font-extrabold text-blue-800 mt-1">เกียรติบัตรผู้พิชิตคำคล้องจอง</h2>
+      <p class="text-xs text-gray-400 mt-0.5">มอบให้เพื่อแสดงว่าผู้เรียนผ่านการทดสอบเกมสัมผัสคล้องจอง</p>
+
+      <!-- ชื่อเด็กนักเรียน -->
+      <div class="my-6 border-b-2 border-dashed border-gray-300 pb-2 w-4/5">
+        <p class="text-xs text-gray-400">ผู้ทำแบบทดสอบ</p>
+        <h1 id="lblResultStudentName" class="text-2xl md:text-3xl font-extrabold text-pink-600 mt-1">เด็กหญิงสมศรี ดีใจ</h1>
+      </div>
+
+      <!-- สรุปเกรดและรางวัล -->
+      <div class="grid grid-cols-3 gap-4 w-full my-4 text-center">
+        <div class="bg-amber-50 rounded-2xl p-3 border border-amber-200">
+          <span class="text-xs text-gray-500 block">คะแนนสะสม</span>
+          <span id="lblResultScore" class="text-xl md:text-2xl font-bold text-amber-600">350</span>
+        </div>
+        <div class="bg-pink-50 rounded-2xl p-3 border border-pink-200">
+          <span class="text-xs text-gray-500 block">ระดับฝีมือ</span>
+          <span id="lblResultGrade" class="text-xl md:text-2xl font-bold text-pink-600">A+</span>
+        </div>
+        <div class="bg-blue-50 rounded-2xl p-3 border border-blue-200">
+          <span class="text-xs text-gray-500 block">ดาวที่ได้รับ</span>
+          <span id="lblResultStars" class="text-xl md:text-2xl font-bold text-blue-600">⭐⭐⭐</span>
+        </div>
+      </div>
+
+      <!-- สรุปผลรายละเอียดแบบตารางย่อย -->
+      <div class="w-full text-left text-xs md:text-sm bg-gray-50 rounded-2xl p-4 border border-gray-100 space-y-1 text-gray-600 mb-6">
+        <div class="flex justify-between">
+          <span>🎯 แตะคำถูกต้อง:</span>
+          <span id="lblResultCorrect" class="font-bold text-green-600">15 ครั้ง</span>
+        </div>
+        <div class="flex justify-between">
+          <span>❌ แตะคำลวงผิดพลาด:</span>
+          <span id="lblResultWrong" class="font-bold text-red-500">2 ครั้ง</span>
+        </div>
+        <div class="flex justify-between">
+          <span>🔥 คอมโบสูงสุด:</span>
+          <span id="lblResultMaxCombo" class="font-bold text-purple-600">x5</span>
+        </div>
+      </div>
+
+      <!-- ลายเซ็นผู้ประสิทธิ์ประสาทวิชา -->
+      <div class="flex justify-between items-end w-full mt-2">
+        <div class="text-left text-xs text-gray-400">
+          <p>วันที่บันทึกผล:</p>
+          <p id="lblResultDate">28 มิ.ย. 2569</p>
+        </div>
+        <div class="text-right">
+          <div class="w-32 border-b border-gray-400 mx-auto text-center font-semibold text-sm text-gray-700 h-8 flex items-end justify-center">
+            <span id="lblResultTeacherSign">ครูปาล์มมี่</span>
+          </div>
+          <p class="text-[10px] text-gray-400 mt-1">ผู้ประเมินผลสัมฤทธิ์</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ปุ่มการจัดการหลังจบเกม -->
+    <div class="w-full max-w-xl mt-6 flex flex-col md:flex-row gap-3">
+      <button id="btnSaveImage" class="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-3.5 px-6 rounded-full shadow-lg transform active:scale-95 transition-all border-b-4 border-indigo-800 flex items-center justify-center gap-2">
+        <span>📸 บันทึกเกียรติบัตรลงเครื่อง</span>
+      </button>
+      <button id="btnRestartGame" class="flex-1 bg-gradient-to-r from-emerald-400 to-green-500 hover:from-emerald-500 hover:to-green-600 text-white font-bold py-3.5 px-6 rounded-full shadow-lg transform active:scale-95 transition-all border-b-4 border-green-700 flex items-center justify-center gap-2">
+        <span>🔄 เล่นใหม่อีกครั้ง</span>
+      </button>
+      <button id="btnBackToHome" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-3.5 px-6 rounded-full shadow-lg transform active:scale-95 transition-all border-b-4 border-gray-600 flex items-center justify-center">
+        <span>🏠 เมนูหลัก</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 4. หน้าตารางคะแนน (Leaderboard Screen) -->
+  <!-- ========================================================= -->
+  <div id="screenLeaderboard" class="absolute inset-0 hidden z-30 overflow-y-auto p-6 flex flex-col items-center">
+    <div class="max-w-md w-full bg-white/95 backdrop-blur-md rounded-3xl p-6 md:p-8 shadow-2xl border-4 border-white my-auto flex flex-col h-[85vh]">
+      <div class="text-center mb-4">
+        <span class="text-5xl">🏆</span>
+        <h2 class="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-amber-600 mt-2">หอเกียรติยศนักล่าคำ</h2>
+        <p class="text-xs text-gray-500 mt-1">จัดอันดับคะแนนสูงสุดของผู้กล้าสัมผัสสละสลวย</p>
+      </div>
+
+      <!-- กล่องรายการตารางคะแนน -->
+      <div id="leaderboardList" class="flex-1 overflow-y-auto space-y-2 pr-1 mb-4">
+        <!-- รายการคะแนนจำลอง / ข้อมูลที่โหลดจากเครื่อง -->
+        <div class="flex items-center justify-between bg-yellow-50 border border-yellow-200 rounded-2xl p-3">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🥇</span>
+            <div>
+              <p class="font-bold text-gray-700">น้องมินนี่</p>
+              <p class="text-[10px] text-gray-400">โรงเรียนบ้านขี้เหล็กใหญ่</p>
+            </div>
+          </div>
+          <span class="text-lg font-extrabold text-yellow-600">450 คะแนน</span>
+        </div>
+      </div>
+
+      <!-- ปุ่มกลับหน้าแรก -->
+      <button id="btnBackFromLeaderboard" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-bold py-3.5 rounded-full shadow-md transform active:scale-95 transition-all border-b-4 border-gray-700">
+        🚪 กลับหน้าแรก
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 5. หน้าตั้งค่าของคุณครู (Teacher Settings Screen) -->
+  <!-- ========================================================= -->
+  <div id="screenSettings" class="absolute inset-0 hidden z-30 overflow-y-auto p-6 flex flex-col items-center">
+    <div class="max-w-2xl w-full bg-white/95 backdrop-blur-md rounded-3xl p-6 md:p-8 shadow-2xl border-4 border-white my-auto flex flex-col h-[90vh]">
+      
+      <!-- ส่วนหัว -->
+      <div class="text-center mb-4 border-b pb-3">
+        <span class="text-4xl">⚙️</span>
+        <h2 class="text-2xl font-bold text-indigo-700 mt-1">แผงควบคุมตั้งค่าสำหรับคุณครู</h2>
+        <p class="text-xs text-gray-500">ปรับแต่งคลังคำสัมผัส ชื่อสถาบัน และระดับความยากได้ตามชอบใจ</p>
+      </div>
+
+      <!-- ส่วนฟอร์มเลื่อนสกรอลล์ -->
+      <div class="flex-1 overflow-y-auto space-y-6 pr-2 mb-4 text-sm">
+        
+        <!-- ข้อมูลโรงเรียนและครู -->
+        <div class="bg-indigo-50/50 rounded-2xl p-4 border border-indigo-100 space-y-4">
+          <h3 class="font-bold text-indigo-700 text-base">✏️ ข้อมูลส่วนบุคคลและชื่อสถาบัน</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-gray-600 font-semibold mb-1 text-xs">ชื่อคุณครู:</label>
+              <input type="text" id="cfgTeacherName" class="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-400 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-gray-600 font-semibold mb-1 text-xs">ชื่อโรงเรียน:</label>
+              <input type="text" id="cfgSchoolName" class="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-400 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-gray-600 font-semibold mb-1 text-xs">ชื่อเกม:</label>
+              <input type="text" id="cfgGameTitle" class="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-400 focus:outline-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- ปรับแต่งระดับความยากและประสิทธิภาพเกม -->
+        <div class="bg-emerald-50/50 rounded-2xl p-4 border border-emerald-100 space-y-4">
+          <h3 class="font-bold text-emerald-700 text-base">⚡ ตั้งค่ากฎการแข่งขัน</h3>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div>
+              <label class="block text-gray-600 font-semibold mb-1 text-xs">ระดับความยาก:</label>
+              <select id="cfgDifficulty" class="w-full p-2.5 rounded-lg border focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white">
+                <option value="easy">ง่าย (ลอยช้ามาก)</option>
+                <option value="normal" selected>ปกติ (กำลังพอดี)</option>
+                <option value="hard">ยาก (ลอยเร็วสะใจ)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-gray-600 font-semibold mb-1 text-xs">เวลาในการแข่งขัน (วินาที):</label>
+              <input type="number" id="cfgPlayTime" min="15" max="300" class="w-full p-2.5 rounded-lg border focus:outline-none focus:ring-2 focus:ring-emerald-400 text-center">
+            </div>
+            <div>
+              <label class="block text-gray-600 font-semibold mb-1 text-xs">จำนวนฟองสูงสุดในจอ:</label>
+              <input type="number" id="cfgMaxBubbles" min="3" max="15" class="w-full p-2.5 rounded-lg border focus:outline-none focus:ring-2 focus:ring-emerald-400 text-center">
+            </div>
+            <div>
+              <label class="block text-gray-600 font-semibold mb-1 text-xs">เสียงประกอบในเกม:</label>
+              <select id="cfgSoundEnabled" class="w-full p-2.5 rounded-lg border focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white">
+                <option value="true">เปิดใช้งาน</option>
+                <option value="false">ปิดใช้งาน</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- การเพิ่มลบคู่คำศัพท์ -->
+        <div class="bg-pink-50/50 rounded-2xl p-4 border border-pink-100 space-y-3">
+          <div class="flex justify-between items-center">
+            <h3 class="font-bold text-pink-700 text-base">📝 คลังคำสัมผัส</h3>
+            <button id="btnAddWordPair" class="bg-pink-600 hover:bg-pink-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-md transform active:scale-95 transition-all">
+              ➕ เพิ่มคู่คำใหม่
+            </button>
+          </div>
+          
+          <div class="text-[11px] text-gray-500 leading-normal mb-2 bg-white/70 p-2.5 rounded-lg border border-pink-100">
+            💡 <strong>วิธีการกรอกคำคลัง:</strong> <br>
+            - <span class="text-pink-600">คำโจทย์:</span> ตัวตั้งต้นที่แสดงกลางจอด้านบน (เช่น "นา") <br>
+            - <span class="text-emerald-600">คำคล้องจอง:</span> คำที่ถูก คั่นด้วยเครื่องหมายจุลภาค ( , ) เช่น "ตา, มา, ปลา" <br>
+            - <span class="text-red-500">คำลวง:</span> คำที่สัมผัสผิด คั่นด้วยเครื่องหมายจุลภาค ( , ) เช่น "หู, เรียน, ปู"
+          </div>
+
+          <!-- ตารางรายการคลังคำทั้งหมด -->
+          <div id="wordPairListContainer" class="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+            <!-- คู่คำจะแสดงด้วย JS ตรงนี้ -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ปุ่มยืนยัน/คืนค่า -->
+      <div class="flex flex-col md:flex-row gap-2 border-t pt-3">
+        <button id="btnSaveSettings" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-full shadow-md transform active:scale-95 transition-all border-b-4 border-indigo-800">
+          💾 บันทึกการตั้งค่า
+        </button>
+        <button id="btnResetToDefault" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-full shadow-md transform active:scale-95 transition-all border-b-4 border-amber-700">
+          🔄 รีเซ็ตเป็นค่าโรงงาน
+        </button>
+        <button id="btnBackFromSettings" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-full shadow-md transform active:scale-95 transition-all border-b-4 border-gray-700">
+          ❌ ยกเลิก
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ระบบแจ้งเตือนลอย Custom Toast Modal (ห้ามใช้ Alert) -->
+  <div id="customToast" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900/90 backdrop-blur-md text-white px-6 py-4 rounded-3xl shadow-2xl z-[100] hidden flex-col items-center gap-2 max-w-xs text-center border-2 border-white/20">
+    <div id="toastIcon" class="text-3xl">💡</div>
+    <div id="toastMessage" class="text-sm font-semibold">ข้อความแจ้งเตือน</div>
+    <button onclick="hideToast()" class="mt-2 bg-pink-500 hover:bg-pink-600 text-white text-xs px-4 py-1.5 rounded-full font-bold">รับทราบ</button>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- JavaScript ตัวเต็มควบคุมการทำงานของเกม -->
+  <!-- ========================================================= -->
+  <script>
+    // --- ตัวแปรหลักของระบบครูปาล์มมี่ ---
+    const APP_ID = "palmy_touch_bubble_rhyme";
+
+    // คู่คำเริ่มต้นในระบบ (หากไม่มีใน localStorage)
+    const DEFAULT_WORD_PAIRS = [
+      { id: "1", target: "นา", matches: ["ตา", "ปลา", "มา", "ฟ้า", "หา", "ยา"], distractors: ["หมู", "เรียน", "จาน", "ดิน"] },
+      { id: "2", target: "ใจ", matches: ["ไป", "ไม้", "ใหม่", "ไหน", "ใส", "ไก่"], distractors: ["พัด", "แก้ว", "นอน", "กิน"] },
+      { id: "3", target: "ดาว", matches: ["ขาว", "หนาว", "ยาว", "ก้าว", "สาว"], distractors: ["มืด", "เสือ", "เรียน", "ฝน"] },
+      { id: "4", target: "มือ", matches: ["คือ", "ลือ", "ถือ", "อือ", "ชื่อ"], distractors: ["ช้อน", "กาง", "ดิน", "ลม"] },
+      { id: "5", target: "เดิน", matches: ["เนิน", "เทิน", "เชิน", "เพลิน", "เขิน"], distractors: ["วิ่ง", "ร้อง", "ฟอง", "ตก"] },
+      { id: "6", target: "ดิน", matches: ["หิน", "ถิ่น", "กิน", "บิน", "ปีน", "ฟิน"], distractors: ["ลม", "น้ำ", "ไฟ", "ทอง"] },
+      { id: "7", target: "เรียน", matches: ["เขียน", "เวียน", "เพียร", "เทียน"], distractors: ["สมุด", "โต๊ะ", "ปู", "มด"] },
+      { id: "8", target: "ลม", matches: ["กลม", "สม", "จม", "พรม", "อม", "ดม"], distractors: ["ฟ้า", "แดด", "ร้อน", "วิ่ง"] }
+    ];
+
+    // ตัวแปรเก็บสภาพแวดล้อมและการตั้งค่าเริ่มต้น
+    let gameSettings = {
+      teacherName: "ครูปาล์มมี่",
+      schoolName: "โรงเรียนบ้านขี้เหล็กใหญ่",
+      gameTitle: "🎤 ล่าคำสัมผัส",
+      playTime: 60,
+      maxBubbles: 7,
+      difficulty: "normal", // easy, normal, hard
+      soundEnabled: true,
+      wordPairs: JSON.parse(JSON.stringify(DEFAULT_WORD_PAIRS))
+    };
+
+    // ตัวแปรรันระบบเกม
+    let gameRunning = false;
+    let score = 0;
+    let combo = 0;
+    let maxCombo = 0;
+    let correctCount = 0;
+    let wrongCount = 0;
+    let timeLeft = 60;
+    let currentPair = null;
+    let bubbleIdCounter = 0;
+    let activeBubbles = [];
+    let animationFrameId = null;
+    let gameTimerId = null;
+    let bubbleSpawnIntervalId = null;
+
+    // ระบบ Web Audio API
+    let audioCtx = null;
+
+    // --- ส่วนตั้งต้นและการโหลดข้อมูลเมื่อเปิดเว็บ ---
+    window.onload = function() {
+      loadSettingsFromStorage();
+      applySettingsToUI();
+      renderLeaderboard();
+    };
+
+    // ฟังก์ชันยิงหน้าต่างแจ้งเตือน Custom แทน alert
+    function showToast(message, icon = "💡") {
+      document.getElementById('toastIcon').innerText = icon;
+      document.getElementById('toastMessage').innerText = message;
+      document.getElementById('customToast').classList.remove('hidden');
+      document.getElementById('customToast').classList.add('flex');
+    }
+
+    function hideToast() {
+      document.getElementById('customToast').classList.add('hidden');
+      document.getElementById('customToast').classList.remove('flex');
+    }
+
+    // --- การเซฟและโหลดข้อมูลผ่าน Local Storage ---
+    function loadSettingsFromStorage() {
+      try {
+        const saved = localStorage.getItem(`${APP_ID}_settings`);
+        if (saved) {
+          gameSettings = JSON.parse(saved);
+        }
+      } catch (err) {
+        console.error("Error loading settings:", err);
+      }
+    }
+
+    function saveSettingsToStorage() {
+      try {
+        localStorage.setItem(`${APP_ID}_settings`, JSON.stringify(gameSettings));
+        applySettingsToUI();
+      } catch (err) {
+        console.error("Error saving settings:", err);
+      }
+    }
+
+    function applySettingsToUI() {
+      // หน้าแรก
+      document.getElementById('lblMainSchool').innerText = gameSettings.schoolName;
+      document.getElementById('lblMainGameTitle').innerText = gameSettings.gameTitle;
+      document.getElementById('lblMainTeacher').innerText = "คุณครูผู้ดูแลระบบ: " + gameSettings.teacherName;
+      
+      // เกียรติบัตร
+      document.getElementById('lblResultSchool').innerText = gameSettings.schoolName;
+      document.getElementById('lblResultTeacherSign').innerText = gameSettings.teacherName;
+    }
+
+    // --- การสร้างเสียงประกอบด้วย Web Audio API ---
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playSoundEffect(type) {
+      if (!gameSettings.soundEnabled) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      const now = audioCtx.currentTime;
+
+      if (type === 'correct') {
+        // เสียงปิ๊งตอบถูก
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now); // C5
+        osc.frequency.exponentialRampToValueAtTime(880.00, now + 0.15); // A5
+        gainNode.gain.setValueAtTime(0.2, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      } else if (type === 'wrong') {
+        // เสียงผิดพลาด
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150.00, now);
+        osc.frequency.exponentialRampToValueAtTime(80.00, now + 0.25);
+        gainNode.gain.setValueAtTime(0.2, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      } else if (type === 'level_start') {
+        // เสียงเริ่มเวล
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(330, now);
+        osc.frequency.setValueAtTime(440, now + 0.1);
+        osc.frequency.setValueAtTime(554, now + 0.2);
+        gainNode.gain.setValueAtTime(0.15, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+        osc.start(now);
+        osc.stop(now + 0.35);
+      } else if (type === 'time_up') {
+        // เสียงหมดเวลา
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(100, now);
+        osc.frequency.setValueAtTime(50, now + 0.15);
+        gainNode.gain.setValueAtTime(0.3, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        osc.start(now);
+        osc.stop(now + 0.4);
+      }
+    }
+
+    // --- ส่วนบริหารสลับหน้าจอทำงาน ---
+    function showScreen(screenId) {
+      const screens = ['screenMainMenu', 'screenGameplay', 'screenResult', 'screenLeaderboard', 'screenSettings'];
+      screens.forEach(id => {
+        const el = document.getElementById(id);
+        if (id === screenId) {
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+        }
+      });
+    }
+
+    // --- การทำงานของกลไกคำศัพท์ ---
+    function pickNextWordPair() {
+      const list = gameSettings.wordPairs;
+      if (!list || list.length === 0) {
+        // Fallback หากไม่มีคำศัพท์
+        currentPair = JSON.parse(JSON.stringify(DEFAULT_WORD_PAIRS[0]));
+        return;
+      }
+      
+      let next;
+      // พยายามไม่ซ้ำคู่เดิมตราบเท่าที่เป็นไปได้
+      do {
+        next = list[Math.floor(Math.random() * list.length)];
+      } while (list.length > 1 && currentPair && next.id === currentPair.id);
+
+      currentPair = next;
+      document.getElementById('lblTargetWord').innerText = currentPair.target;
+    }
+
+    // --- กลไกฟองคำลอยและจัดการ (CRITICAL MECHANIC) ---
+    function clearAllBubbles() {
+      const area = document.getElementById('bubbleArea');
+      area.innerHTML = '';
+      activeBubbles = [];
+    }
+
+    // สร้างฟองคำเดี่ยว
+    function createBubble() {
+      if (!gameRunning) return;
+      if (!currentPair) return;
+
+      const area = document.getElementById('bubbleArea');
+      const size = Math.random() * 40 + 80; // ขนาดฟอง 80px ถึง 120px
+      const left = Math.random() * (window.innerWidth - size);
+      const top = window.innerHeight + size; // เริ่มจากด้านล่างพ้นจอ
+
+      // การตัดสินใจเลือกคำในฟอง
+      // สัดส่วนระดับความยาก: Easy: คำถูก 60%, Normal: คำถูก 50%, Hard: คำถูก 40%
+      let ratio = 0.5;
+      if (gameSettings.difficulty === 'easy') ratio = 0.65;
+      if (gameSettings.difficulty === 'hard') ratio = 0.35;
+
+      const isCorrect = Math.random() < ratio;
+      let wordText = "";
+
+      if (isCorrect && currentPair.matches && currentPair.matches.length > 0) {
+        wordText = currentPair.matches[Math.floor(Math.random() * currentPair.matches.length)];
+      } else if (currentPair.distractors && currentPair.distractors.length > 0) {
+        wordText = currentPair.distractors[Math.floor(Math.random() * currentPair.distractors.length)];
+      } else {
+        // Fallback ตัวสำรองกรณีคำไม่ครบ
+        wordText = isCorrect ? "ตา" : "หมู";
+      }
+
+      // สร้างวัตถุองค์ประกอบ DOM
+      const el = document.createElement('div');
+      el.id = `bubble_${bubbleIdCounter++}`;
+      el.className = "bubble-sphere absolute rounded-full flex items-center justify-center text-center p-3 font-semibold text-sky-950 text-base md:text-lg cursor-pointer transform hover:scale-105 active:scale-95 transition-transform select-none border border-white/50";
+      el.style.width = `${size}px`;
+      el.style.height = `${size}px`;
+      el.style.left = `${left}px`;
+      el.style.top = `${top}px`;
+      el.style.zIndex = "20";
+      el.style.touchAction = "none"; // กันหน้าจอเลื่อนซูม
+
+      // ใส่คำศัพท์ในฟอง
+      el.innerHTML = `<span class="drop-shadow-sm font-bold truncate max-w-full">${wordText}</span>`;
+
+      // ใส่เหตุการณ์ตรวจจับแตะ (ใช้ pointerdown เท่านั้น ตามข้อระวังของ iPad/มือถือ)
+      el.addEventListener('pointerdown', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        handleBubbleTap(el.id, isCorrect);
+      }, { passive: false });
+
+      // แนบเข้าในพื้นที่จอ
+      area.appendChild(el);
+
+      // ตั้งค่าระดับความเร็วตามระดับความยาก
+      let baseSpeed = 0.5; // normal
+      if (gameSettings.difficulty === 'easy') baseSpeed = 0.35;
+      if (gameSettings.difficulty === 'hard') baseSpeed = 0.85;
+
+      // ตัวสุ่มเพิ่มเติมเล็กน้อยเพื่อให้ฟองเคลื่อนที่อิสระต่างกัน
+      const randomSpeed = baseSpeed + (Math.random() * 0.3);
+
+      // บันทึกสถานะฟอง
+      activeBubbles.push({
+        id: el.id,
+        el: el,
+        x: left,
+        y: top,
+        size: size,
+        speed: randomSpeed,
+        isCorrect: isCorrect,
+        word: wordText
+      });
+    }
+
+    // ลูปเคลื่อนที่ requestAnimationFrame (ห้ามใช้ CSS keyframe ในการลอย)
+    function moveBubbles() {
+      if (!gameRunning) return;
+
+      const areaHeight = window.innerHeight;
+      
+      for (let i = activeBubbles.length - 1; i >= 0; i--) {
+        const b = activeBubbles[i];
+        
+        // อัปเดตตำแหน่งแกน Y ลอยขึ้นไปด้านบน
+        b.y -= b.speed;
+        b.el.style.top = b.y + 'px';
+
+        // เมื่อพ้นขอบด้านบนทั้งหมดจริงๆ ให้ลบและเติมฟองใหม่
+        if (b.y < -b.size) {
+          b.el.remove();
+          activeBubbles.splice(i, 1);
+          createBubble(); // ทดแทนส่วนที่สูญหายทันที
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(moveBubbles);
+    }
+
+    // เติมจำนวนฟองให้เต็มจอตามที่ตั้งไว้ในแผงความถี่
+    function refillBubbles() {
+      if (!gameRunning) return;
+      while (activeBubbles.length < gameSettings.maxBubbles) {
+        createBubble();
+      }
+    }
+
+    // การตอบสนองเมื่อแตะฟองคำ
+    function handleBubbleTap(bubbleId, isCorrect) {
+      if (!gameRunning) return;
+
+      // ค้นหาวัตถุฟองสบู่
+      const idx = activeBubbles.findIndex(b => b.id === bubbleId);
+      if (idx === -1) return;
+
+      const b = activeBubbles[idx];
+
+      if (isCorrect) {
+        // กรณีตอบถูกต้อง!
+        score += 10 + (combo * 2);
+        combo++;
+        if (combo > maxCombo) maxCombo = combo;
+        correctCount++;
+        playSoundEffect('correct');
+
+        // สร้างเอฟเฟกต์ระเบิดฟองเล็กน้อย
+        b.el.classList.add('scale-150', 'opacity-0', 'transition-all', 'duration-300');
+        setTimeout(() => b.el.remove(), 300);
+
+        // นำออกจากรายการและเติมฟองใหม่ทันที
+        activeBubbles.splice(idx, 1);
+        createBubble();
+
+        // เพื่อความท้าทาย: เมื่อตอบถูกครบช่วง มีโอกาสสุ่มเปลี่ยนคำโจทย์ใหม่
+        if (correctCount % 3 === 0) {
+          pickNextWordPair();
+          // ล้างบางฟองเพื่อให้ผู้เล่นสู้กับเป้าหมายใหม่
+          clearAllBubbles();
+          // หลังล้างฟอง ต้องสร้างทันที 1 ลูกเพื่อความต่อเนื่อง
+          createBubble();
+          refillBubbles();
+        }
+
+      } else {
+        // กรณีตอบผิด!
+        score = Math.max(0, score - 5);
+        combo = 0;
+        wrongCount++;
+        playSoundEffect('wrong');
+
+        // เอฟเฟกต์ตอบผิด: สั่นจอ + ฟองแฟบลงชั่วครู่
+        b.el.classList.add('bg-red-200');
+        document.getElementById('screenGameplay').classList.add('shake-effect');
+        setTimeout(() => {
+          document.getElementById('screenGameplay').classList.remove('shake-effect');
+        }, 400);
+
+        // ให้ฟองลอยต่อ หรือสุ่มทำลายทิ้งเพื่อไม่ให้ขวางตา
+        b.el.classList.add('scale-75', 'opacity-50');
+        b.el.style.pointerEvents = 'none'; // ปิดการกดฟองนี้ซ้ำ
+      }
+
+      // อัปเดตการแสดงผล HUD
+      document.getElementById('hudScore').innerText = score;
+      document.getElementById('hudCombo').innerText = `x${combo}`;
+      
+      const comboArea = document.getElementById('hudComboArea');
+      if (combo >= 3) {
+        comboArea.classList.remove('text-pink-500');
+        comboArea.classList.add('text-orange-500', 'scale-110', 'font-extrabold');
+      } else {
+        comboArea.classList.remove('text-orange-500', 'scale-110', 'font-extrabold');
+        comboArea.classList.add('text-pink-500');
+      }
+    }
+
+    // --- ฟังก์ชันดำเนินเกมหลัก (Game Loop Controls) ---
+    function startGame() {
+      initAudio();
+      
+      // ดึงค่าผู้เล่น
+      const nameInput = document.getElementById('txtStudentName').value.trim();
+      const studentName = nameInput || "ผู้กล้านิรนาม";
+      document.getElementById('hudStudentName').innerText = "ชื่อ: " + studentName;
+
+      score = 0;
+      combo = 0;
+      maxCombo = 0;
+      correctCount = 0;
+      wrongCount = 0;
+      timeLeft = parseInt(gameSettings.playTime) || 60;
+
+      document.getElementById('hudScore').innerText = "0";
+      document.getElementById('hudCombo').innerText = "x0";
+      document.getElementById('hudTime').innerText = timeLeft;
+
+      showScreen('screenGameplay');
+
+      // เปิด Overlay เตรียมนับถอยหลัง 3-2-1
+      const overlay = document.getElementById('countdownOverlay');
+      const counterEl = document.getElementById('countdownNumber');
+      overlay.classList.remove('hidden');
+
+      let currentCount = 3;
+      counterEl.innerText = currentCount;
+      playSoundEffect('level_start');
+
+      const cdInterval = setInterval(() => {
+        currentCount--;
+        if (currentCount > 0) {
+          counterEl.innerText = currentCount;
+          playSoundEffect('level_start');
+        } else {
+          clearInterval(cdInterval);
+          overlay.classList.add('hidden');
+          
+          // สตาร์ตการทำงานของเกมอย่างแท้จริง
+          gameRunning = true;
+          pickNextWordPair();
+          
+          // เคลียร์เศษซากเดิมและเริ่มต้นสร้างฟอง
+          clearAllBubbles();
+          createBubble(); // เกิดทันทีลูกที่ 1
+          refillBubbles();
+
+          // ลูปเคลื่อนไหวของ JS
+          animationFrameId = requestAnimationFrame(moveBubbles);
+
+          // ลูปความถี่เติมฟองคำต่อเนื่อง
+          bubbleSpawnIntervalId = setInterval(() => {
+            refillBubbles();
+          }, 1500);
+
+          // ตัวนับเวลาถอยหลังการเล่น
+          gameTimerId = setInterval(() => {
+            timeLeft--;
+            document.getElementById('hudTime').innerText = timeLeft;
+
+            if (timeLeft <= 5) {
+              document.getElementById('hudTime').classList.add('scale-125', 'text-red-600');
+            } else {
+              document.getElementById('hudTime').classList.remove('scale-125', 'text-red-600');
+            }
+
+            if (timeLeft <= 0) {
+              endGame();
+            }
+          }, 1000);
+        }
+      }, 1000);
+    }
+
+    // ฟังก์ชันหยุด/ยุติเกมการเล่น
+    function endGame() {
+      gameRunning = false;
+      clearInterval(gameTimerId);
+      clearInterval(bubbleSpawnIntervalId);
+      cancelAnimationFrame(animationFrameId);
+      playSoundEffect('time_up');
+
+      clearAllBubbles();
+
+      // สรุปเกรดตามสถิติค่านิยม
+      let grade = "C";
+      let stars = "⭐";
+      if (score >= 300) {
+        grade = "A+";
+        stars = "⭐⭐⭐";
+      } else if (score >= 200) {
+        grade = "A";
+        stars = "⭐⭐⭐";
+      } else if (score >= 100) {
+        grade = "B";
+        stars = "⭐⭐";
+      } else if (score >= 50) {
+        grade = "C+";
+        stars = "⭐";
+      }
+
+      // บันทึกผลลงใน Leaderboard
+      const studentName = document.getElementById('txtStudentName').value.trim() || "ผู้กล้านิรนาม";
+      saveLeaderboardScore(studentName, score);
+
+      // นำผลลัพธ์ไปใส่หน้าจอสรุปผล
+      document.getElementById('lblResultStudentName').innerText = studentName;
+      document.getElementById('lblResultScore').innerText = score;
+      document.getElementById('lblResultGrade').innerText = grade;
+      document.getElementById('lblResultStars').innerText = stars;
+      document.getElementById('lblResultCorrect').innerText = `${correctCount} ครั้ง`;
+      document.getElementById('lblResultWrong').innerText = `${wrongCount} ครั้ง`;
+      document.getElementById('lblResultMaxCombo').innerText = `x${maxCombo}`;
+
+      // วันที่แบบไทย
+      const now = new Date();
+      const monthNames = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+      const thaiYear = now.getFullYear() + 543;
+      document.getElementById('lblResultDate').innerText = `${now.getDate()} ${monthNames[now.getMonth()]} ${thaiYear}`;
+
+      showScreen('screenResult');
+    }
+
+    // --- ส่วนบริการลีดเดอร์บอร์ดตารางคะแนน ---
+    function saveLeaderboardScore(name, scoreVal) {
+      try {
+        let scores = [];
+        const saved = localStorage.getItem(`${APP_ID}_leaderboard`);
+        if (saved) {
+          scores = JSON.parse(saved);
+        }
+
+        // เพิ่มรายการใหม่
+        scores.push({
+          name: name,
+          school: gameSettings.schoolName,
+          score: scoreVal,
+          date: Date.now()
+        });
+
+        // จัดอันดับเรียงจากมากไปน้อยและดึงเฉพาะ top 10
+        scores.sort((a, b) => b.score - a.score);
+        scores = scores.slice(0, 10);
+
+        localStorage.setItem(`${APP_ID}_leaderboard`, JSON.stringify(scores));
+        renderLeaderboard();
+      } catch (err) {
+        console.error("Error saving leaderboard:", err);
+      }
+    }
+
+    function renderLeaderboard() {
+      const container = document.getElementById('leaderboardList');
+      container.innerHTML = "";
+
+      let scores = [];
+      try {
+        const saved = localStorage.getItem(`${APP_ID}_leaderboard`);
+        if (saved) {
+          scores = JSON.parse(saved);
+        }
+      } catch (err) {
+        console.error("Error reading leaderboard:", err);
+      }
+
+      // หากตารางว่าง ให้เพิ่มรายชื่อจำลองเพื่อความมีสีสัน
+      if (scores.length === 0) {
+        scores = [
+          { name: "น้องนะโม", school: gameSettings.schoolName, score: 380, date: Date.now() },
+          { name: "น้องส้มส้ม", school: gameSettings.schoolName, score: 290, date: Date.now() },
+          { name: "น้องสายฟ้า", school: gameSettings.schoolName, score: 180, date: Date.now() }
+        ];
+      }
+
+      scores.forEach((item, index) => {
+        let medal = "⭐️";
+        if (index === 0) medal = "🥇";
+        else if (index === 1) medal = "🥈";
+        else if (index === 2) medal = "🥉";
+
+        const card = document.createElement('div');
+        card.className = "flex items-center justify-between bg-white border border-gray-100 rounded-2xl p-3 shadow-sm";
+        card.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">${medal}</span>
+            <div>
+              <p class="font-bold text-gray-700">${item.name}</p>
+              <p class="text-[10px] text-gray-400">${item.school || gameSettings.schoolName}</p>
+            </div>
+          </div>
+          <span class="text-base font-extrabold text-indigo-600">${item.score} คะแนน</span>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // --- ส่วนบริหารการบันทึกภาพถ่าย (html2canvas) ---
+    document.getElementById('btnSaveImage').addEventListener('click', function() {
+      const container = document.getElementById('certificateContainer');
+      
+      // ตรวจสอบห้องสมุดเพื่อความมั่นใจ
+      if (typeof html2canvas === 'undefined') {
+        showToast("ไม่สามารถเรียกโปรแกรมบันทึกภาพได้เนื่องจากการเชื่อมต่อขัดข้อง กรุณาแคปหน้าจอแทนนะคะคุณครู", "⚠️");
+        return;
+      }
+
+      // ซ่อนเงาทึบบางส่วนตอนแคปและตั้งค่าสัดส่วน
+      html2canvas(container, {
+        scale: 2, // เพิ่มความชัดระดับ Super HD
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        borderRadius: "2.5rem"
+      }).then(canvas => {
+        try {
+          const imgData = canvas.toDataURL('image/png');
+          const link = document.createElement('a');
+          const studentName = document.getElementById('lblResultStudentName').innerText;
+          link.download = `เกียรติบัตร_สัมผัสคล้องจอง_${studentName}.png`;
+          link.href = imgData;
+          link.click();
+          showToast("บันทึกเกียรติบัตรเป็นรูปภาพสำเร็จแล้วจ้า!", "🎉");
+        } catch (err) {
+          console.error("Download blocked or error:", err);
+          showToast("ระบบไม่อนุญาตให้เซฟไฟล์ออโต้ คุณครูสามารถถ่ายภาพหน้าจอเก็บแทนได้เลยนะคะ!", "📸");
+        }
+      }).catch(err => {
+        console.error("html2canvas generation fail:", err);
+        showToast("ระบบมีข้อจำกัดด้านความปลอดภัยในการประมวลผล แนะนำแคปหน้าจอเพื่อบันทึกประเมินผลจ้า", "⚠️");
+      });
+    });
+
+    // --- ระบบตั้งค่าของคุณครู (Teacher Control Room) ---
+    function renderWordPairsInSettings() {
+      const listContainer = document.getElementById('wordPairListContainer');
+      listContainer.innerHTML = "";
+
+      gameSettings.wordPairs.forEach((pair, idx) => {
+        const item = document.createElement('div');
+        item.className = "bg-white p-3.5 rounded-xl border border-pink-200 shadow-sm space-y-2 relative";
+        item.innerHTML = `
+          <button onclick="deleteWordPair('${pair.id}')" class="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold text-sm bg-red-50 hover:bg-red-100 rounded-full w-6 h-6 flex items-center justify-center">
+            ✕
+          </button>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div>
+              <span class="text-xs text-pink-700 font-bold block">คำโจทย์:</span>
+              <input type="text" value="${pair.target}" onchange="updatePairValue('${pair.id}', 'target', this.value)" class="w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-pink-400 focus:outline-none">
+            </div>
+            <div>
+              <span class="text-xs text-emerald-700 font-bold block">คำถูก (คั่นด้วยจุลภาค):</span>
+              <input type="text" value="${pair.matches.join(',')}" onchange="updatePairValue('${pair.id}', 'matches', this.value)" class="w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-pink-400 focus:outline-none">
+            </div>
+            <div>
+              <span class="text-xs text-red-500 font-bold block">คำลวง (คั่นด้วยจุลภาค):</span>
+              <input type="text" value="${pair.distractors.join(',')}" onchange="updatePairValue('${pair.id}', 'distractors', this.value)" class="w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-pink-400 focus:outline-none">
+            </div>
+          </div>
+        `;
+        listContainer.appendChild(item);
+      });
+    }
+
+    // อัปเดตคุณสมบัติคำศัพท์แบบ Dynamic
+    window.updatePairValue = function(id, field, value) {
+      const pair = gameSettings.wordPairs.find(p => p.id === id);
+      if (!pair) return;
+
+      if (field === 'target') {
+        pair.target = value.trim();
+      } else if (field === 'matches') {
+        pair.matches = value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      } else if (field === 'distractors') {
+        pair.distractors = value.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      }
+    };
+
+    // ลบคู่คำศัพท์ออก
+    window.deleteWordPair = function(id) {
+      if (gameSettings.wordPairs.length <= 1) {
+        showToast("ต้องมีคลังคำไว้อย่างน้อยที่สุด 1 คู่นะคะคุณครูปาล์มมี่", "⚠️");
+        return;
+      }
+      gameSettings.wordPairs = gameSettings.wordPairs.filter(p => p.id !== id);
+      renderWordPairsInSettings();
+    };
+
+    // เพิ่มคู่คำสัมผัสใหม่
+    document.getElementById('btnAddWordPair').addEventListener('click', function() {
+      const newId = String(Date.now());
+      gameSettings.wordPairs.push({
+        id: newId,
+        target: "คำใหม่",
+        matches: ["ใช่"],
+        distractors: ["ไม่ใช่"]
+      });
+      renderWordPairsInSettings();
+      
+      // เลื่อนตำแหน่งโฟกัสลงมาล่างสุด
+      setTimeout(() => {
+        const listContainer = document.getElementById('wordPairListContainer');
+        listContainer.scrollTop = listContainer.scrollHeight;
+      }, 100);
+    });
+
+    // เปิดหน้าตั้งค่า
+    document.getElementById('btnGoToSettings').addEventListener('click', function() {
+      document.getElementById('cfgTeacherName').value = gameSettings.teacherName;
+      document.getElementById('cfgSchoolName').value = gameSettings.schoolName;
+      document.getElementById('cfgGameTitle').value = gameSettings.gameTitle;
+      document.getElementById('cfgPlayTime').value = gameSettings.playTime;
+      document.getElementById('cfgMaxBubbles').value = gameSettings.maxBubbles;
+      document.getElementById('cfgDifficulty').value = gameSettings.difficulty;
+      document.getElementById('cfgSoundEnabled').value = String(gameSettings.soundEnabled);
+
+      renderWordPairsInSettings();
+      showScreen('screenSettings');
+    });
+
+    // ปุ่มบันทึกการตั้งค่าลงเครื่อง
+    document.getElementById('btnSaveSettings').addEventListener('click', function() {
+      const tName = document.getElementById('cfgTeacherName').value.trim();
+      const sName = document.getElementById('cfgSchoolName').value.trim();
+      const gTitle = document.getElementById('cfgGameTitle').value.trim();
+      const pTime = parseInt(document.getElementById('cfgPlayTime').value);
+      const mBubbles = parseInt(document.getElementById('cfgMaxBubbles').value);
+      const diff = document.getElementById('cfgDifficulty').value;
+      const sEnabled = document.getElementById('cfgSoundEnabled').value === 'true';
+
+      // Validation แบบสุภาพ
+      if (!tName || !sName || !gTitle) {
+        showToast("กรุณากรอกข้อมูลส่วนบุคคลและสถาบันให้ครบถ้วนนะคะ", "✍️");
+        return;
+      }
+      if (isNaN(pTime) || pTime < 15 || pTime > 300) {
+        showToast("เวลารอบแข่งขันควรอยู่ระหว่าง 15-300 วินาทีค่ะ", "⏱️");
+        return;
+      }
+      if (isNaN(mBubbles) || mBubbles < 3 || mBubbles > 15) {
+        showToast("จำนวนฟองในหน้าจอควรอยู่ระหว่าง 3-15 ฟองนะคะ", "🎈");
+        return;
+      }
+
+      // บันทึกค่า
+      gameSettings.teacherName = tName;
+      gameSettings.schoolName = sName;
+      gameSettings.gameTitle = gTitle;
+      gameSettings.playTime = pTime;
+      gameSettings.maxBubbles = mBubbles;
+      gameSettings.difficulty = diff;
+      gameSettings.soundEnabled = sEnabled;
+
+      saveSettingsToStorage();
+      showToast("บันทึกการปรับปรุงข้อมูลคุณครูเสร็จสมบูรณ์!", "🎉");
+      showScreen('screenMainMenu');
+    });
+
+    // คืนค่าเริ่มต้นจากโรงงาน
+    document.getElementById('btnResetToDefault').addEventListener('click', function() {
+      if (confirm("คุณครูปาล์มมี่แน่ใจนะคะว่าจะรีเซ็ตคลังคำทั้งหมดเป็นแบบดั้งเดิม?")) {
+        gameSettings = {
+          teacherName: "ครูปาล์มมี่",
+          schoolName: "โรงเรียนบ้านขี้เหล็กใหญ่",
+          gameTitle: "🎤 ล่าคำสัมผัส",
+          playTime: 60,
+          maxBubbles: 7,
+          difficulty: "normal",
+          soundEnabled: true,
+          wordPairs: JSON.parse(JSON.stringify(DEFAULT_WORD_PAIRS))
+        };
+        saveSettingsToStorage();
+        showToast("คืนค่าเริ่มต้นจากระบบเรียบร้อยแล้วค่ะ", "🔄");
+        showScreen('screenMainMenu');
+      }
+    });
+
+    // --- ส่วนบริหารปุ่มและการผูกปุ่มต่าง ๆ ---
+    document.getElementById('btnStartGame').addEventListener('click', function() {
+      startGame();
+    });
+
+    document.getElementById('btnGoToLeaderboard').addEventListener('click', function() {
+      renderLeaderboard();
+      showScreen('screenLeaderboard');
+    });
+
+    document.getElementById('btnBackFromLeaderboard').addEventListener('click', function() {
+      showScreen('screenMainMenu');
+    });
+
+    document.getElementById('btnBackFromSettings').addEventListener('click', function() {
+      showScreen('screenMainMenu');
+    });
+
+    document.getElementById('btnRestartGame').addEventListener('click', function() {
+      startGame();
+    });
+
+    document.getElementById('btnBackToHome').addEventListener('click', function() {
+      showScreen('screenMainMenu');
+    });
+  </script>
+</body>
+</html>
